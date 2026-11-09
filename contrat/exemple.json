@@ -1,0 +1,23 @@
+[
+    {
+        "image": "bouteille_avec_defaut.jpg",
+        "status": "defects_detected",
+        "detections": [
+            {
+                "label": "Bubble",
+                "confidence": 0.94,
+                "bbox": [
+                    120,
+                    80,
+                    200,
+                    160
+                ]
+            }
+        ]
+    },
+    {
+        "image": "bouteille_saine.jpg",
+        "status": "no_defect",
+        "detections": []
+    }
+]
