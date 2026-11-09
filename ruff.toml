@@ -1,0 +1,19 @@
+# Configuration générale
+line-length = 88
+target-version = "py311"
+
+# Règles d'analyse
+[lint]
+select = [
+    "E",    # Erreurs de style Python (pycodestyle)
+    "F",    # Erreurs détectées par Pyflakes
+    "I",    # Organisation des imports
+    "UP",   # Modernisation de la syntaxe Python
+    "B"     # Détection de bugs potentiels
+]
+
+# Configuration du formateur
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
