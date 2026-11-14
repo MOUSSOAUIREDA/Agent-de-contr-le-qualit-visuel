@@ -1,2 +1,3 @@
 -r requirements-modele.txt
 -r requirements-api.txt
+-r requirements-frontend.txt

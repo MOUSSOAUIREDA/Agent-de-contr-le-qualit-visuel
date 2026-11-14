@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import pytest
@@ -32,6 +31,7 @@ def lire_document(nom):
 # 1. Vérification de l'existence des documents
 # --------------------------------------------------
 
+
 @pytest.mark.parametrize("nom", FICHIERS)
 def test_existence_documents(nom):
     assert (DOCS_DIR / nom).is_file()
@@ -40,6 +40,7 @@ def test_existence_documents(nom):
 # --------------------------------------------------
 # 2. Vérification de la présentation du projet
 # --------------------------------------------------
+
 
 def test_presentation_projet():
     contenu = lire_document("00_presentation.md").lower()
@@ -59,10 +60,9 @@ def test_presentation_projet():
 # 3. Vérification de la problématique et des objectifs
 # --------------------------------------------------
 
+
 def test_problematique_objectifs():
-    contenu = lire_document(
-        "01_problematique_objectifs.md"
-    ).lower()
+    contenu = lire_document("01_problematique_objectifs.md").lower()
 
     mots_attendus = [
         "problématique",
@@ -79,10 +79,9 @@ def test_problematique_objectifs():
 # 4. Vérification du périmètre fonctionnel
 # --------------------------------------------------
 
+
 def test_perimetre_v1():
-    contenu = lire_document(
-        "02_perimetre_fonctionnel.md"
-    ).lower()
+    contenu = lire_document("02_perimetre_fonctionnel.md").lower()
 
     mots_attendus = [
         "version initiale",
@@ -97,9 +96,7 @@ def test_perimetre_v1():
 
 
 def test_classes_defauts():
-    contenu = lire_document(
-        "02_perimetre_fonctionnel.md"
-    )
+    contenu = lire_document("02_perimetre_fonctionnel.md")
 
     classes = [
         "Bubble",
@@ -117,26 +114,22 @@ def test_classes_defauts():
 # 5. Vérification des exigences fonctionnelles
 # --------------------------------------------------
 
+
 def test_exigences_fonctionnelles():
-    contenu = lire_document(
-        "03_exigences_fonctionnelles.md"
-    )
+    contenu = lire_document("03_exigences_fonctionnelles.md")
 
     for identifiant in range(1, 16):
         exigence = f"EF-{identifiant:02d}"
-        assert exigence in contenu, (
-            f"Exigence fonctionnelle manquante : {exigence}"
-        )
+        assert exigence in contenu, f"Exigence fonctionnelle manquante : {exigence}"
 
 
 # --------------------------------------------------
 # 6. Vérification des exigences non fonctionnelles
 # --------------------------------------------------
 
+
 def test_exigences_non_fonctionnelles():
-    contenu = lire_document(
-        "04_exigences_non_fonctionnelles.md"
-    )
+    contenu = lire_document("04_exigences_non_fonctionnelles.md")
 
     rubriques = [
         "Performance",
@@ -148,19 +141,16 @@ def test_exigences_non_fonctionnelles():
     ]
 
     for rubrique in rubriques:
-        assert rubrique in contenu, (
-            f"Rubrique manquante : {rubrique}"
-        )
+        assert rubrique in contenu, f"Rubrique manquante : {rubrique}"
 
 
 # --------------------------------------------------
 # 7. Vérification des critères de validation
 # --------------------------------------------------
 
+
 def test_criteres_validation():
-    contenu = lire_document(
-        "05_criteres_validation.md"
-    )
+    contenu = lire_document("05_criteres_validation.md")
 
     mots_attendus = [
         "Validation fonctionnelle",
@@ -180,10 +170,9 @@ def test_criteres_validation():
 # 8. Vérification de la cohérence du périmètre
 # --------------------------------------------------
 
+
 def test_decision_industrielle_exclue_de_v1():
-    contenu = lire_document(
-        "02_perimetre_fonctionnel.md"
-    ).lower()
+    contenu = lire_document("02_perimetre_fonctionnel.md").lower()
 
     assert "accept/reject" in contenu
     assert "fonctionnalités exclues" in contenu

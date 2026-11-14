@@ -21,11 +21,7 @@ def test_exemples_valides():
 
 def test_liste_detections_vide():
     """Une réponse sans défaut doit être valide."""
-    reponse = {
-        "image": "bouteille_saine.jpg",
-        "status": "no_defect",
-        "detections": []
-    }
+    reponse = {"image": "bouteille_saine.jpg", "status": "no_defect", "detections": []}
 
     resultat = Reponse.model_validate(reponse)
 
@@ -38,12 +34,8 @@ def test_label_invalide():
         "image": "bouteille.jpg",
         "status": "defects_detected",
         "detections": [
-            {
-                "label": "rayure",
-                "confidence": 0.95,
-                "bbox": [100, 80, 200, 160]
-            }
-        ]
+            {"label": "rayure", "confidence": 0.95, "bbox": [100, 80, 200, 160]}
+        ],
     }
 
     with pytest.raises(ValidationError):
@@ -56,12 +48,8 @@ def test_bbox_inversee():
         "image": "bouteille.jpg",
         "status": "defects_detected",
         "detections": [
-            {
-                "label": "Bubble",
-                "confidence": 0.95,
-                "bbox": [200, 80, 100, 160]
-            }
-        ]
+            {"label": "Bubble", "confidence": 0.95, "bbox": [200, 80, 100, 160]}
+        ],
     }
 
     with pytest.raises(ValidationError):

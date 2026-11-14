@@ -1,4 +1,3 @@
-
 """Tests sur l'historique Git : un commit par membre.
 
 Ignorés si le dossier n'est pas un dépôt Git
@@ -36,14 +35,11 @@ def test_has_at_least_one_commit(git_root: Path):
 def test_each_member_has_committed(git_root: Path):
     out = _git(git_root, "shortlog", "-sn", "--all")
     authors = [
-        line.split("\t", 1)[1].strip()
-        for line in out.splitlines()
-        if "\t" in line
+        line.split("\t", 1)[1].strip() for line in out.splitlines() if "\t" in line
     ]
 
     assert len(authors) >= MIN_AUTHORS, (
-        f"{len(authors)} auteur(s) de commits, "
-        f"{MIN_AUTHORS} attendus : {authors}"
+        f"{len(authors)} auteur(s) de commits, {MIN_AUTHORS} attendus : {authors}"
     )
 
 

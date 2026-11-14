@@ -4,13 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class Detection(BaseModel):
-    label: Literal[
-        "Bubble",
-        "Plastering thread",
-        "Black spot",
-        "Oil",
-        "Quenched grain"
-    ]
+    label: Literal["Bubble", "Plastering thread", "Black spot", "Oil", "Quenched grain"]
 
     confidence: float = Field(ge=0, le=1)
 

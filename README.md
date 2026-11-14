@@ -48,6 +48,18 @@ python -m pytest -v
 ruff check .
 ruff format --check .
 
+6. Lancer l'interface utilisateur Streamlit (Frontend - TP5)
+```bash
+streamlit run app.py
+```
+*(ou `streamlit run frontend/app.py`)*
+
+L'application s'ouvre automatiquement dans votre navigateur à l'adresse `http://localhost:8501`.
+
+- **Autres options disponibles :**
+  - Serveur Python autonome : `python run_frontend.py` (ou double-cliquer sur `frontend/index.html`).
+  - Mode React / Vite (si Node.js est installé) : `cd frontend && npm install && npm run dev`.
+
 Organisation du projet
 
 Le projet évolue progressivement au fil des étapes du cours :
