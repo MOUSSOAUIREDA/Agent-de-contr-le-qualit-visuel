@@ -1,458 +1,1402 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QualiGlass AI — Contrôle qualité des bouteilles en verre</title>
-<style>
-  :root {
-    --fond: #0f172a;
-    --carte: #1e293b;
-    --bord: #334155;
-    --texte: #e2e8f0;
-    --discret: #94a3b8;
-    --ok: #10b981;
-    --ko: #f43f5e;
-    --accent: #06b6d4;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--fond);
-    color: var(--texte);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    line-height: 1.5;
-  }
-  header, main { max-width: 1100px; margin: 0 auto; padding: 16px 20px; }
-  h1 { font-size: 1.4rem; margin: 0 0 4px; }
-  h2 { font-size: 1.05rem; margin: 0 0 12px; }
-  .sous-titre { color: var(--discret); margin: 0; font-size: .9rem; }
-  .carte {
-    background: var(--carte);
-    border: 1px solid var(--bord);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  .ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-  input[type="text"] {
-    flex: 1 1 240px;
-    background: var(--fond);
-    color: var(--texte);
-    border: 1px solid var(--bord);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font: inherit;
-  }
-  button {
-    background: var(--accent);
-    color: #042f3a;
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button.secondaire { background: transparent; color: var(--texte); border: 1px solid var(--bord); }
-  button:focus-visible, input:focus-visible, .depot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .point { width: 10px; height: 10px; border-radius: 50%; background: var(--discret); display: inline-block; }
-  .point.ok { background: var(--ok); }
-  .point.ko { background: var(--ko); }
-  .depot {
-    display: block;
-    width: 100%;
-    border: 2px dashed var(--bord);
-    background: transparent;
-    color: var(--texte);
-    border-radius: 12px;
-    padding: 36px 16px;
-    text-align: center;
-    font-weight: 500;
-  }
-  .depot.survol { border-color: var(--accent); background: rgba(6, 182, 212, .08); }
-  .depot small { display: block; color: var(--discret); font-weight: 400; margin-top: 4px; }
-  .verdict { border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; border: 1.5px solid; }
-  .verdict.pass { border-color: var(--ok); background: rgba(16, 185, 129, .12); }
-  .verdict.fail { border-color: var(--ko); background: rgba(244, 63, 94, .12); }
-  .verdict strong { display: block; font-size: 1.05rem; }
-  .verdict span { color: var(--discret); font-size: .85rem; }
-  .grille { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
-  @media (max-width: 800px) { .grille { grid-template-columns: 1fr; } }
-  canvas { width: 100%; height: auto; border-radius: 8px; background: #000; display: block; }
-  .defaut { border: 1px solid var(--bord); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; border-left-width: 5px; }
-  .defaut .tete { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
-  .defaut .detail { color: var(--discret); font-size: .8rem; font-family: ui-monospace, Consolas, monospace; }
-  .filtres label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4px 0; font-size: .85rem; }
-  .pastille { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-  .compteurs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; text-align: center; }
-  .compteurs div { background: var(--fond); border: 1px solid var(--bord); border-radius: 10px; padding: 10px; }
-  .compteurs b { display: block; font-size: 1.4rem; }
-  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord); }
-  th { color: var(--discret); font-weight: 500; }
-  .erreur { border-color: var(--ko); background: rgba(244, 63, 94, .12); color: #fecdd3; }
-  [hidden] { display: none !important; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QualiGlass AI — Contrôle Qualité Visuel des Bouteilles en Verre</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'><circle cx='12' cy='12' r='10'/></svg>" />
+
+  <!-- Tailwind CSS via CDN avec configuration personnalisée -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            bubble: "#06b6d4",
+            thread: "#a855f7",
+            blackspot: "#f59e0b",
+            oil: "#f43f5e",
+            grain: "#10b981",
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Polices Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- React 18, ReactDOM et Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #4b5563;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.05); }
+    }
+    .animate-glow {
+      animation: pulse-slow 4s ease-in-out infinite;
+    }
+    @media print {
+      body { background: white !important; color: black !important; }
+      header, .no-print, button, input { display: none !important; }
+      #printable-report { display: block !important; }
+    }
+  </style>
 </head>
-<body>
-<header>
-  <h1>QualiGlass AI</h1>
-  <p class="sous-titre">Détection des défauts sur bouteilles en verre : bulle, fil de verre, tache noire, huile, grain de trempe.</p>
-</header>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+  <div id="root" class="flex-1 flex flex-col"></div>
 
-<main>
-  <section class="carte" aria-label="Connexion à l'API">
-    <div class="ligne">
-      <span id="point" class="point" aria-hidden="true"></span>
-      <span id="etat-api" role="status">API non vérifiée</span>
-    </div>
-    <div class="ligne" style="margin-top:10px">
-      <label for="api-url">Adresse de l'API</label>
-      <input type="text" id="api-url" value="http://localhost:8000" autocomplete="off" spellcheck="false">
-      <button type="button" id="tester" class="secondaire">Tester la connexion</button>
-    </div>
-    <p class="sous-titre" style="margin-top:8px">Laissez vide pour utiliser le serveur de <code>run_frontend.py</code> (simulation).</p>
-  </section>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-  <section class="carte" aria-label="Dépôt de l'image">
-    <h2>1. Déposer une image de bouteille</h2>
-    <button type="button" id="depot" class="depot">
-      Glissez une image ici, ou cliquez pour en choisir une
-      <small>JPEG, PNG, BMP ou WEBP — 10 Mo maximum</small>
-    </button>
-    <input type="file" id="fichier" accept="image/jpeg,image/png,image/bmp,image/webp" hidden>
-    <div id="message" class="carte erreur" role="alert" hidden style="margin:12px 0 0"></div>
-    <p id="attente" class="sous-titre" hidden style="margin-top:12px">Analyse en cours…</p>
-  </section>
+    // Définition des classes de défauts selon contrat/schema.py
+    const DEFECT_CLASSES = {
+      "Bubble": {
+        label: "Bubble",
+        fr: "Bulle d'air",
+        description: "Poche de gaz piégée dans le verre pendant le formage thermique.",
+        color: "#06b6d4",
+        border: "border-cyan-500",
+        bg: "bg-cyan-500/15",
+        text: "text-cyan-400"
+      },
+      "Plastering thread": {
+        label: "Plastering thread",
+        fr: "Fil / Cordon de verre",
+        description: "Pli ou filament linéaire en surface altérant l'homogénéité.",
+        color: "#a855f7",
+        border: "border-purple-500",
+        bg: "bg-purple-500/15",
+        text: "text-purple-400"
+      },
+      "Black spot": {
+        label: "Black spot",
+        fr: "Tache noire / Inclusion",
+        description: "Particule réfractaire ou résidu d'infusion carbonisé opaque.",
+        color: "#f59e0b",
+        border: "border-amber-500",
+        bg: "bg-amber-500/15",
+        text: "text-amber-400"
+      },
+      "Oil": {
+        label: "Oil",
+        fr: "Trace d'huile",
+        description: "Dépôt d'huile ou lubrifiant sur la paroi externe/interne.",
+        color: "#f43f5e",
+        border: "border-rose-500",
+        bg: "bg-rose-500/15",
+        text: "text-rose-400"
+      },
+      "Quenched grain": {
+        label: "Quenched grain",
+        fr: "Grain de trempe",
+        description: "Micro-cristallisation ou grain thermique suite au recuit.",
+        color: "#10b981",
+        border: "border-emerald-500",
+        bg: "bg-emerald-500/15",
+        text: "text-emerald-400"
+      }
+    };
 
-  <section id="resultat" hidden aria-label="Résultats">
-    <h2>2. Résultat de l'inspection</h2>
-    <div id="verdict" class="verdict"><strong id="verdict-titre"></strong><span id="verdict-detail"></span></div>
+    // Générateur SVG pour les bouteilles d'échantillons
+    function createBottleSvg({ bubble = false, blackSpot = false, oil = false, thread = false, grain = false }) {
+      const width = 400;
+      const height = 500;
+      let defectsSvg = "";
 
-    <div class="grille">
-      <div class="carte">
-        <canvas id="canvas" aria-label="Image annotée"></canvas>
-        <p id="mesures" class="sous-titre" style="margin:8px 0 0"></p>
-      </div>
-      <div>
-        <div class="carte filtres">
-          <h2>Filtres</h2>
-          <label for="seuil">Confiance minimale : <b id="seuil-valeur">50 %</b></label>
-          <input type="range" id="seuil" min="0" max="100" value="50" style="width:100%">
-          <div id="classes" style="margin-top:8px"></div>
+      if (bubble) {
+        defectsSvg += `
+          <g id="defect-bubble">
+            <circle cx="160" cy="120" r="32" fill="url(#bubbleGrad)" stroke="#67e8f9" stroke-width="2.5" opacity="0.9" />
+            <ellipse cx="150" cy="108" rx="10" ry="5" fill="#ffffff" opacity="0.8" />
+            <circle cx="172" cy="132" r="4" fill="#ffffff" opacity="0.6" />
+          </g>
+        `;
+      }
+      if (blackSpot) {
+        defectsSvg += `
+          <g id="defect-black-spot">
+            <path d="M148,190 Q158,185 168,193 Q174,204 165,212 Q150,214 145,202 Z" fill="#18181b" stroke="#71717a" stroke-width="1.5" />
+            <circle cx="152" cy="196" r="3" fill="#27272a" />
+          </g>
+        `;
+      }
+      if (oil) {
+        defectsSvg += `
+          <g id="defect-oil">
+            <path d="M225,270 C240,260 275,268 285,282 C292,298 278,315 255,318 C235,320 220,305 222,288 Z" fill="url(#oilGrad)" opacity="0.75" />
+          </g>
+        `;
+      }
+      if (thread) {
+        defectsSvg += `
+          <g id="defect-thread">
+            <path d="M185,120 Q170,160 215,205 T195,280" fill="none" stroke="#e9d5ff" stroke-width="4.5" stroke-linecap="round" opacity="0.85" />
+            <path d="M187,122 Q172,162 217,207 T197,282" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" opacity="0.9" />
+          </g>
+        `;
+      }
+      if (grain) {
+        defectsSvg += `
+          <g id="defect-grain">
+            <circle cx="115" cy="360" r="14" fill="url(#grainGrad)" stroke="#34d399" stroke-width="2" stroke-dasharray="3,2" />
+            <circle cx="125" cy="372" r="8" fill="#34d399" opacity="0.6" />
+            <circle cx="108" cy="355" r="4" fill="#6ee7b7" opacity="0.8" />
+          </g>
+        `;
+      }
+
+      const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="bottleBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#064e3b" stop-opacity="0.85" />
+      <stop offset="25%" stop-color="#059669" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#10b981" stop-opacity="0.25" />
+      <stop offset="75%" stop-color="#059669" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#022c22" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="bottleHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
+    </linearGradient>
+    <radialGradient id="bubbleGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#67e8f9" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0891b2" stop-opacity="0.8" />
+    </radialGradient>
+    <radialGradient id="oilGrad" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fb7185" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#e11d48" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#881337" stop-opacity="0.9" />
+    </radialGradient>
+    <radialGradient id="grainGrad" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#a7f3d0" stop-opacity="0.9" />
+      <stop offset="70%" stop-color="#10b981" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.8" />
+    </radialGradient>
+  </defs>
+
+  <rect width="${width}" height="${height}" fill="url(#bgGrad)" />
+
+  <!-- Quadrillage industriel d'inspection -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.3">
+    <line x1="50" y1="0" x2="50" y2="500" />
+    <line x1="100" y1="0" x2="100" y2="500" />
+    <line x1="200" y1="0" x2="200" y2="500" stroke="#0ea5e9" stroke-width="0.8" stroke-dasharray="4,4" />
+    <line x1="300" y1="0" x2="300" y2="500" />
+    <line x1="350" y1="0" x2="350" y2="500" />
+    <line x1="0" y1="100" x2="400" y2="100" />
+    <line x1="0" y1="200" x2="400" y2="200" />
+    <line x1="0" y1="250" x2="400" y2="250" stroke="#0ea5e9" stroke-width="0.8" stroke-dasharray="4,4" />
+    <line x1="0" y1="300" x2="400" y2="300" />
+    <line x1="0" y1="400" x2="400" y2="400" />
+  </g>
+
+  <!-- Corps de la bouteille en verre -->
+  <g id="glass-bottle">
+    <path d="
+      M 172,30
+      L 228,30
+      C 232,30 234,34 234,40
+      L 230,48
+      C 228,52 226,60 226,75
+      C 226,90 236,115 285,150
+      C 305,165 315,190 315,225
+      L 315,440
+      C 315,455 305,465 285,465
+      L 115,465
+      C 95,465 85,455 85,440
+      L 85,225
+      C 85,190 95,165 115,150
+      C 164,115 174,90 174,75
+      C 174,60 172,52 170,48
+      L 166,40
+      C 166,34 168,30 172,30 Z
+    " fill="url(#bottleBody)" stroke="#34d399" stroke-width="2" stroke-opacity="0.7" />
+
+    <ellipse cx="200" cy="34" rx="30" ry="6" fill="#047857" stroke="#6ee7b7" stroke-width="1.5" />
+    <ellipse cx="200" cy="46" rx="31" ry="5" fill="#065f46" stroke="#34d399" stroke-width="1.2" />
+
+    <!-- Reflet spéculaire gauche -->
+    <path d="
+      M 178,75
+      C 178,92 168,118 125,150
+      C 107,164 100,185 100,215
+      L 100,430
+      C 100,438 102,442 105,445
+      L 96,445
+      C 92,440 90,435 90,425
+      L 90,220
+      C 90,192 98,168 118,153
+      C 160,122 170,96 170,75 Z
+    " fill="url(#bottleHighlight)" />
+
+    <path d="M 300,220 L 300,430" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.3" />
+    <path d="M 115,455 Q 200,440 285,455" fill="none" stroke="#047857" stroke-width="3" opacity="0.7" />
+  </g>
+
+  <!-- Défauts simulés -->
+  ${defectsSvg}
+</svg>
+`;
+      return "data:image/svg+xml;utf8," + encodeURIComponent(svg.trim());
+    }
+
+    // Échantillons de test prêts à l'emploi (Démonstration & Validation)
+    const MOCK_SAMPLES = [
+      {
+        id: "sample-bubble",
+        name: "Bouteille avec Bulle",
+        tag: "Bubble (Exemple Officiel)",
+        description: "Conforme à l'exemple contrat/exemple.json avec détection d'une bulle sur le col.",
+        data: {
+          image: "bouteille_avec_defaut.jpg",
+          status: "defects_detected",
+          detections: [
+            {
+              label: "Bubble",
+              confidence: 0.94,
+              bbox: [120, 80, 200, 160]
+            }
+          ]
+        },
+        imageUrl: createBottleSvg({ bubble: true })
+      },
+      {
+        id: "sample-clean",
+        name: "Bouteille Saine",
+        tag: "Sans Défaut (Conforme)",
+        description: "Bouteille saine conforme (status: no_defect, 0 détection) selon le contrat.",
+        data: {
+          image: "bouteille_saine.jpg",
+          status: "no_defect",
+          detections: []
+        },
+        imageUrl: createBottleSvg({})
+      },
+      {
+        id: "sample-multi",
+        name: "Bouteille Multi-Défauts",
+        tag: "3 Défauts Critiques",
+        description: "Bouteille présentant une tache noire, de l'huile résiduelle et un grain de trempe.",
+        data: {
+          image: "bouteille_multi_defauts.jpg",
+          status: "defects_detected",
+          detections: [
+            {
+              label: "Black spot",
+              confidence: 0.91,
+              bbox: [140, 180, 175, 215]
+            },
+            {
+              label: "Oil",
+              confidence: 0.87,
+              bbox: [220, 260, 290, 320]
+            },
+            {
+              label: "Quenched grain",
+              confidence: 0.79,
+              bbox: [95, 340, 145, 390]
+            }
+          ]
+        },
+        imageUrl: createBottleSvg({ blackSpot: true, oil: true, grain: true })
+      },
+      {
+        id: "sample-thread",
+        name: "Bouteille avec Fil de Verre",
+        tag: "Plastering thread",
+        description: "Filament/cordon de verre le long de l'épaule et du corps de la bouteille.",
+        data: {
+          image: "bouteille_fil_verre.jpg",
+          status: "defects_detected",
+          detections: [
+            {
+              label: "Plastering thread",
+              confidence: 0.88,
+              bbox: [160, 110, 240, 290]
+            }
+          ]
+        },
+        imageUrl: createBottleSvg({ thread: true })
+      }
+    ];
+
+    // Logique heuristique de simulation pour les images importées par l'utilisateur
+    function generateMockDetection(fileName, imgWidth = 400, imgHeight = 500) {
+      const classes = ["Bubble", "Plastering thread", "Black spot", "Oil", "Quenched grain"];
+      let hash = 0;
+      for (let i = 0; i < fileName.length; i++) {
+        hash = (hash << 5) - hash + fileName.charCodeAt(i);
+        hash |= 0;
+      }
+      const hasDefect = Math.abs(hash) % 5 !== 0;
+
+      if (!hasDefect) {
+        return {
+          image: fileName,
+          status: "no_defect",
+          detections: []
+        };
+      }
+
+      const count = (Math.abs(hash) % 3) + 1;
+      const detections = [];
+      for (let i = 0; i < count; i++) {
+        const label = classes[(Math.abs(hash) + i) % classes.length];
+        const confidence = parseFloat((0.74 + (Math.abs(hash * (i + 1)) % 24) / 100).toFixed(2));
+        const boxW = Math.max(30, Math.floor(imgWidth * (0.12 + 0.05 * i)));
+        const boxH = Math.max(30, Math.floor(imgHeight * (0.10 + 0.04 * i)));
+        const xMin = Math.floor(imgWidth * 0.25 + (Math.abs(hash + i * 37) % Math.floor(imgWidth * 0.4)));
+        const yMin = Math.floor(imgHeight * 0.15 + (Math.abs(hash + i * 73) % Math.floor(imgHeight * 0.6)));
+
+        detections.push({
+          label,
+          confidence: Math.min(0.99, confidence),
+          bbox: [xMin, yMin, Math.min(imgWidth - 5, xMin + boxW), Math.min(imgHeight - 5, yMin + boxH)]
+        });
+      }
+
+      return {
+        image: fileName,
+        status: "defects_detected",
+        detections
+      };
+    }
+
+    // Composant Principal
+    function App() {
+      const [mode, setMode] = useState("mock"); // "mock" ou "live"
+      const [apiUrl, setApiUrl] = useState("http://localhost:8000");
+      const [isBackendOnline, setIsBackendOnline] = useState(false);
+      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+      // Données de l'inspection active
+      const [currentImage, setCurrentImage] = useState(null);
+      const [currentFileName, setCurrentFileName] = useState("");
+      const [imageDimensions, setImageDimensions] = useState({ width: 400, height: 500 });
+      const [analysisResult, setAnalysisResult] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState(null);
+
+      // Contrôles interactifs du Canvas
+      const [hoveredDefect, setHoveredDefect] = useState(null);
+      const [selectedDefect, setSelectedDefect] = useState(null);
+      const [minConfidence, setMinConfidence] = useState(0.5);
+      const [showBoxes, setShowBoxes] = useState(true);
+      const [showLabels, setShowLabels] = useState(true);
+      const [showConf, setShowConf] = useState(true);
+      const [activeClasses, setActiveClasses] = useState(null);
+
+      // Historique et Compteurs
+      const [history, setHistory] = useState([]);
+      const [stats, setStats] = useState({ total: 0, passed: 0, failed: 0 });
+
+      // Canvas ref & image
+      const canvasRef = useRef(null);
+      const [zoom, setZoom] = useState(1);
+      const [pan, setPan] = useState({ x: 0, y: 0 });
+      const [isPanning, setIsPanning] = useState(false);
+      const [startPan, setStartPan] = useState({ x: 0, y: 0 });
+      const [cursorCoords, setCursorCoords] = useState({ x: 0, y: 0 });
+      const imageElementRef = useRef(null);
+
+      // Tester la disponibilité du backend au montage
+      useEffect(() => {
+        const checkHealth = async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const res = await fetch(`${apiUrl}/docs`, { method: "HEAD", signal: controller.signal })
+              .catch(() => fetch(`${apiUrl}/health`, { method: "GET", signal: controller.signal }));
+            clearTimeout(timeoutId);
+            if (res && (res.ok || res.status === 200 || res.status === 404)) {
+              setIsBackendOnline(true);
+            }
+          } catch {
+            setIsBackendOnline(false);
+          }
+        };
+        checkHealth();
+      }, [apiUrl]);
+
+      // Dessin sur Canvas
+      useEffect(() => {
+        if (!currentImage || !canvasRef.current) return;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = currentImage;
+        img.onload = () => {
+          imageElementRef.current = img;
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+
+          canvas.width = img.naturalWidth || 400;
+          canvas.height = img.naturalHeight || 500;
+
+          // Nettoyer
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Dessiner l'image originale
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Dessiner les boîtes englobantes
+          if (showBoxes && analysisResult && analysisResult.detections) {
+            analysisResult.detections.forEach((det, idx) => {
+              if (det.confidence < minConfidence) return;
+              if (activeClasses && !activeClasses.includes(det.label)) return;
+
+              const [xMin, yMin, xMax, yMax] = det.bbox;
+              const w = xMax - xMin;
+              const h = yMax - yMin;
+              const meta = DEFECT_CLASSES[det.label] || { color: "#38bdf8" };
+              const isHovered = hoveredDefect === idx;
+              const isSelected = selectedDefect === idx;
+
+              ctx.save();
+
+              // Boîte englobante avec lueur
+              if (isHovered || isSelected) {
+                ctx.shadowColor = meta.color;
+                ctx.shadowBlur = 18;
+                ctx.strokeStyle = meta.color;
+                ctx.lineWidth = 4;
+                ctx.fillStyle = `${meta.color}25`;
+                ctx.fillRect(xMin, yMin, w, h);
+              } else {
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = meta.color;
+                ctx.lineWidth = 2.5;
+                ctx.fillStyle = `${meta.color}15`;
+                ctx.fillRect(xMin, yMin, w, h);
+              }
+              ctx.strokeRect(xMin, yMin, w, h);
+
+              // Réticules / coins HUD
+              const corner = Math.min(12, Math.min(w, h) / 3);
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 2;
+
+              ctx.beginPath();
+              ctx.moveTo(xMin, yMin + corner); ctx.lineTo(xMin, yMin); ctx.lineTo(xMin + corner, yMin);
+              ctx.moveTo(xMax - corner, yMin); ctx.lineTo(xMax, yMin); ctx.lineTo(xMax, yMin + corner);
+              ctx.moveTo(xMin, yMax - corner); ctx.lineTo(xMin, yMax); ctx.lineTo(xMin + corner, yMax);
+              ctx.moveTo(xMax - corner, yMax); ctx.lineTo(xMax, yMax); ctx.lineTo(xMax, yMax - corner);
+              ctx.stroke();
+
+              // Étiquette
+              if (showLabels) {
+                const labelText = showConf
+                  ? `${det.label} ${(det.confidence * 100).toFixed(0)}%`
+                  : det.label;
+
+                ctx.font = "bold 13px 'Inter', sans-serif";
+                const metrics = ctx.measureText(labelText);
+                const pad = 8;
+                const tagH = 22;
+                const tagW = metrics.width + pad * 2;
+                let tagX = xMin;
+                let tagY = yMin - tagH;
+                if (tagY < 0) tagY = yMin + 2;
+
+                ctx.fillStyle = isHovered || isSelected ? meta.color : "rgba(15, 23, 42, 0.94)";
+                ctx.beginPath();
+                ctx.roundRect(tagX, tagY, tagW, tagH, 4);
+                ctx.fill();
+
+                ctx.strokeStyle = meta.color;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = isHovered || isSelected ? "#030712" : "#f8fafc";
+                ctx.textBaseline = "middle";
+                ctx.fillText(labelText, tagX + pad, tagY + tagH / 2);
+              }
+
+              ctx.restore();
+            });
+          }
+        };
+      }, [currentImage, analysisResult, hoveredDefect, selectedDefect, minConfidence, showBoxes, showLabels, showConf, activeClasses]);
+
+      // Gestion du Pan / Drag
+      const handleMouseDown = (e) => {
+        if (e.button === 0 && zoom > 1) {
+          setIsPanning(true);
+          setStartPan({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+        }
+      };
+
+      const handleMouseMove = (e) => {
+        if (isPanning) {
+          setPan({ x: e.clientX - startPan.x, y: e.clientY - startPan.y });
+        }
+        if (canvasRef.current) {
+          const rect = canvasRef.current.getBoundingClientRect();
+          const scaleX = canvasRef.current.width / rect.width;
+          const scaleY = canvasRef.current.height / rect.height;
+          setCursorCoords({
+            x: Math.max(0, Math.min(canvasRef.current.width, Math.round((e.clientX - rect.left) * scaleX))),
+            y: Math.max(0, Math.min(canvasRef.current.height, Math.round((e.clientY - rect.top) * scaleY)))
+          });
+        }
+      };
+
+      const handleMouseUp = () => setIsPanning(false);
+
+      const handleCanvasClick = (e) => {
+        if (!canvasRef.current || isPanning || !analysisResult?.detections) return;
+        const rect = canvasRef.current.getBoundingClientRect();
+        const scaleX = canvasRef.current.width / rect.width;
+        const scaleY = canvasRef.current.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
+        for (let i = analysisResult.detections.length - 1; i >= 0; i--) {
+          const [xMin, yMin, xMax, yMax] = analysisResult.detections[i].bbox;
+          if (clickX >= xMin && clickX <= xMax && clickY >= yMin && clickY <= yMax) {
+            setSelectedDefect(i === selectedDefect ? null : i);
+            return;
+          }
+        }
+        setSelectedDefect(null);
+      };
+
+      // Traiter un échantillon rapide
+      const handleSampleSelect = (sample) => {
+        setError(null);
+        setCurrentImage(sample.imageUrl);
+        setCurrentFileName(sample.data.image);
+        setAnalysisResult(sample.data);
+        setSelectedDefect(null);
+        setHoveredDefect(null);
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+
+        const isPassed = sample.data.status === "no_defect" || sample.data.detections.length === 0;
+        setHistory((prev) => [
+          {
+            timestamp: Date.now(),
+            timeStr: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            imageUrl: sample.imageUrl,
+            data: sample.data
+          },
+          ...prev
+        ]);
+        setStats((prev) => ({
+          total: prev.total + 1,
+          passed: prev.passed + (isPassed ? 1 : 0),
+          failed: prev.failed + (isPassed ? 0 : 1)
+        }));
+      };
+
+      // Traiter l'upload d'un fichier utilisateur
+      const handleFileUpload = async (file) => {
+        setError(null);
+        if (!file) return;
+
+        // Validation du format (EF-02, EF-03)
+        const validFormats = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
+        const isValid = validFormats.includes(file.type) || /\.(jpe?g|png|webp|bmp)$/i.test(file.name);
+        if (!isValid) {
+          setError(`Format de fichier non pris en charge (${file.type || "inconnu"}). Veuillez importer une image JPG, PNG, WEBP ou BMP.`);
+          return;
+        }
+
+        if (file.size > 20 * 1024 * 1024) {
+          setError("L'image est trop volumineuse. La taille maximale acceptée est de 20 Mo.");
+          return;
+        }
+
+        setIsLoading(true);
+        setCurrentFileName(file.name);
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const url = event.target.result;
+          setCurrentImage(url);
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+
+          const testImg = new Image();
+          testImg.src = url;
+          testImg.onload = async () => {
+            const dims = { width: testImg.naturalWidth || 400, height: testImg.naturalHeight || 500 };
+            setImageDimensions(dims);
+
+            try {
+              let result;
+              if (mode === "mock") {
+                // Simulation avec latence réseau réaliste
+                await new Promise((r) => setTimeout(r, 400));
+                result = generateMockDetection(file.name, dims.width, dims.height);
+              } else {
+                // Tentative d'appel FastAPI (Membre B)
+                const formData = new FormData();
+                formData.append("file", file);
+                const resp = await fetch(`${apiUrl}/predict`, {
+                  method: "POST",
+                  body: formData
+                });
+                if (!resp.ok) {
+                  throw new Error(`Erreur API ${resp.status}: ${resp.statusText}`);
+                }
+                result = await resp.json();
+              }
+
+              setAnalysisResult(result);
+              setSelectedDefect(null);
+              setHoveredDefect(null);
+
+              const isPassed = result.status === "no_defect" || result.detections.length === 0;
+              setHistory((prev) => [
+                {
+                  timestamp: Date.now(),
+                  timeStr: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                  imageUrl: url,
+                  data: result
+                },
+                ...prev
+              ]);
+              setStats((prev) => ({
+                total: prev.total + 1,
+                passed: prev.passed + (isPassed ? 1 : 0),
+                failed: prev.failed + (isPassed ? 0 : 1)
+              }));
+            } catch (err) {
+              console.warn("Bascule en mode simulation:", err.message);
+              // Fallback gracieux en simulation
+              const fallback = generateMockDetection(file.name, dims.width, dims.height);
+              setAnalysisResult(fallback);
+              setError(`Backend FastAPI non disponible (${err.message}). Affichage des résultats en mode simulation locale.`);
+            } finally {
+              setIsLoading(false);
+            }
+          };
+        };
+        reader.readAsDataURL(file);
+      };
+
+      // Exporter JSON conforme au contrat
+      const handleExportJson = () => {
+        if (!analysisResult) return;
+        const cleanPayload = {
+          image: analysisResult.image || currentFileName,
+          status: analysisResult.status,
+          detections: (analysisResult.detections || []).map((d) => ({
+            label: d.label,
+            confidence: d.confidence,
+            bbox: d.bbox
+          }))
+        };
+        const blob = new Blob([JSON.stringify(cleanPayload, null, 2)], { type: "application/json" });
+        const dlUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = dlUrl;
+        a.download = `controle_qualite_${(analysisResult.image || "bouteille").replace(/\.[^/.]+$/, "")}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(dlUrl);
+      };
+
+      const toggleClassFilter = (c) => {
+        setActiveClasses((prev) => {
+          if (!prev) {
+            const all = Object.keys(DEFECT_CLASSES);
+            return all.filter((x) => x !== c);
+          }
+          if (prev.includes(c)) {
+            const next = prev.filter((x) => x !== c);
+            return next.length === 0 ? null : next;
+          }
+          return [...prev, c];
+        });
+      };
+
+      const visibleDetections = (analysisResult?.detections || []).filter(
+        (d) => d.confidence >= minConfidence && (!activeClasses || activeClasses.includes(d.label))
+      );
+
+      const isHealthy = analysisResult && (analysisResult.status === "no_defect" || analysisResult.detections.length === 0);
+
+      return (
+        <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+          {/* Header */}
+          <header className="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between flex-wrap gap-3">
+              {/* Logo & Titre */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-white/20">
+                  <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 3h6v3a4 4 0 0 1 1 2.8V19a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V8.8A4 4 0 0 1 9 6V3z" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                    <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg font-bold text-white tracking-tight">QualiGlass AI</h1>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-medium">
+                      Contrôle Qualité Visuel
+                    </span>
+                    <span className="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 font-mono">
+                      Membre C : Frontend
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Détection et localisation automatique des défauts de bouteilles en verre
+                  </p>
+                </div>
+              </div>
+
+              {/* Statistiques et Mode */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="hidden md:flex items-center gap-3 bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800 text-xs">
+                  <span className="text-slate-400">Total : <strong className="text-white">{stats.total}</strong></span>
+                  <span className="text-slate-700">|</span>
+                  <span className="text-emerald-400">Conformes : <strong>{stats.passed}</strong></span>
+                  <span className="text-slate-700">|</span>
+                  <span className="text-rose-400">Rejets : <strong>{stats.failed}</strong></span>
+                </div>
+
+                {/* Mode Démo vs Live */}
+                <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+                  <button
+                    onClick={() => setMode("mock")}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                      mode === "mock"
+                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                    Mode Démo / Mock
+                  </button>
+                  <button
+                    onClick={() => setMode("live")}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                      mode === "live"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${isBackendOnline ? "bg-emerald-400" : "bg-amber-400"}`}></span>
+                    Live API FastAPI
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60"
+                  title="Paramètres de l'API"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Bandeau d'état informatif */}
+          <div className="bg-slate-900/60 border-b border-slate-800/60 px-4 py-2 text-xs flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <span><strong>Membre A :</strong> Entraînement du modèle YOLO en cours</span>
+              <span className="text-slate-600">•</span>
+              <span><strong>Membre B :</strong> Intégration backend FastAPI</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-cyan-300"><strong>Membre C :</strong> Interface prête et synchronisée sur contrat/schema.py</span>
+            </div>
+            <div className="text-slate-400 font-mono text-[11px]">
+              Contrat V1 • 5 classes ciblées
+            </div>
+          </div>
+
+          {/* Contenu Principal */}
+          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col space-y-6">
+            {!currentImage ? (
+              /* Écran d'accueil & Zone d'importation */
+              <div className="flex-1 flex flex-col justify-center max-w-3xl mx-auto w-full py-8 space-y-8">
+                <div className="text-center space-y-3">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400 font-mono">
+                    Poste de Contrôle Qualité — TP5
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                    Inspection Visuelle Automatisée
+                  </h2>
+                  <p className="text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">
+                    Importez une image de bouteille en verre pour détecter et localiser automatiquement les 5 classes de défauts industriels.
+                  </p>
+                </div>
+
+                {/* Boîte de drop */}
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+                  }}
+                  className="border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-2xl p-8 sm:p-12 text-center bg-slate-900/40 hover:bg-slate-900/70 transition-all cursor-pointer relative group"
+                  onClick={() => document.getElementById("file-upload").click()}
+                >
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.bmp,image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
+                    }}
+                  />
+
+                  <div className="max-w-md mx-auto space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-slate-800 to-slate-700 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:text-cyan-300 transition-transform border border-slate-600/50 shadow-inner">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-semibold text-white">
+                        Glissez-déposez l'image d'une bouteille ici
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        ou <span className="text-cyan-400 underline font-medium">parcourez vos fichiers</span> depuis votre poste
+                      </p>
+                    </div>
+
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs text-slate-400 font-mono">
+                      <span>JPG</span> • <span>PNG</span> • <span>WEBP</span> • <span>BMP (Max 20 Mo)</span>
+                    </div>
+                  </div>
+
+                  {isLoading && (
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-3">
+                      <div className="w-10 h-10 border-3 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin"></div>
+                      <p className="text-sm font-medium text-cyan-300">Analyse optique en cours...</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Message d'erreur (EF-03) */}
+                {error && (
+                  <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 flex items-start gap-3">
+                    <svg className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="flex-1 text-xs">
+                      <p className="font-semibold text-rose-200">Avertissement de validation (EF-03)</p>
+                      <p className="mt-0.5">{error}</p>
+                    </div>
+                    <button onClick={() => setError(null)} className="text-rose-400 hover:text-white font-bold">✕</button>
+                  </div>
+                )}
+
+                {/* Échantillons prédéfinis */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Échantillons de Démonstration (Prêts pour le test immédiat)
+                      </h4>
+                    </div>
+                    <span className="text-xs text-slate-500 font-mono">contrat/exemple.json</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {MOCK_SAMPLES.map((sample) => (
+                      <button
+                        key={sample.id}
+                        onClick={() => handleSampleSelect(sample)}
+                        className="flex flex-col text-left p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-cyan-500/40 transition-all group"
+                      >
+                        <div className="w-full h-24 rounded-lg bg-slate-950 flex items-center justify-center overflow-hidden mb-2.5 border border-slate-800">
+                          <img src={sample.imageUrl} alt={sample.name} className="h-full object-contain group-hover:scale-105 transition-transform" />
+                        </div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-xs font-semibold text-white group-hover:text-cyan-300 truncate">
+                            {sample.name}
+                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                            sample.data.status === "no_defect"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                              : "bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                          }`}>
+                            {sample.data.status === "no_defect" ? "Conforme" : `${sample.data.detections.length} déf.`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                          {sample.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Écran d'analyse interactif */
+              <div className="flex-1 flex flex-col space-y-6">
+                {/* Bannière de Verdict (EF-07 à EF-10) */}
+                {analysisResult && (
+                  <div className={`relative overflow-hidden rounded-2xl p-5 border shadow-xl flex items-center gap-4 ${
+                    isHealthy
+                      ? "bg-gradient-to-r from-emerald-950/70 via-slate-900 to-slate-900 border-emerald-500/40 shadow-emerald-950/40"
+                      : "bg-gradient-to-r from-rose-950/70 via-slate-900 to-slate-900 border-rose-500/40 shadow-rose-950/40"
+                  }`}>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isHealthy
+                        ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
+                        : "bg-rose-500/20 border border-rose-500/40 text-rose-400 animate-pulse"
+                    }`}>
+                      {isHealthy ? (
+                        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className={`text-lg font-bold tracking-tight ${isHealthy ? "text-emerald-300" : "text-rose-300"}`}>
+                          {isHealthy ? "CONFORME — Aucun défaut détecté (EF-10)" : `NON CONFORME — ${analysisResult.detections.length} défaut(s) détecté(s)`}
+                        </h2>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          isHealthy ? "bg-emerald-400 text-slate-950" : "bg-rose-500 text-white"
+                        }`}>
+                          {isHealthy ? "QC VALIDÉ" : "REJET QUALITÉ"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        {isHealthy
+                          ? "La bouteille en verre satisfait tous les critères de conformité optique."
+                          : "Défauts identifiés sur la bouteille nécessitant isolation ou inspection approfondie."}
+                      </p>
+                      <p className="text-[11px] font-mono text-slate-400 mt-1 truncate">
+                        Fichier : {currentFileName || analysisResult.image}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Grille principale : Inspecteur à gauche, Détails à droite */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* Colonne Gauche : Visualiseur Canvas (7 col) */}
+                  <div className="lg:col-span-7 flex flex-col bg-slate-950/60 rounded-2xl border border-slate-800 overflow-hidden">
+                    {/* Barre d'outils du visualiseur */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-200">Inspecteur Optique</span>
+                        <span className="text-slate-500">•</span>
+                        <span className="text-slate-400 font-mono">
+                          {canvasRef.current ? `${canvasRef.current.width} × ${canvasRef.current.height} px` : "400 × 500 px"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
+                          <button
+                            onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
+                            className="px-2 py-0.5 hover:bg-slate-800 text-slate-300 rounded font-bold"
+                            title="Zoom -"
+                          >
+                            −
+                          </button>
+                          <span className="px-2 py-0.5 font-mono text-[11px] text-slate-300">
+                            {Math.round(zoom * 100)}%
+                          </span>
+                          <button
+                            onClick={() => setZoom((z) => Math.min(3, z + 0.25))}
+                            className="px-2 py-0.5 hover:bg-slate-800 text-slate-300 rounded font-bold"
+                            title="Zoom +"
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+                            className="px-2 py-0.5 hover:bg-slate-800 text-cyan-400 text-[11px] font-medium border-l border-slate-800"
+                          >
+                            100%
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setCurrentImage(null);
+                            setAnalysisResult(null);
+                            setSelectedDefect(null);
+                            setError(null);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium transition-colors flex items-center gap-1.5"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Changer d'image
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Zone Canvas avec drag/pan */}
+                    <div
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      className="relative overflow-hidden flex items-center justify-center p-4 min-h-[460px] bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950 select-none cursor-crosshair"
+                    >
+                      <div
+                        style={{
+                          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                          transformOrigin: "center center",
+                          transition: isPanning ? "none" : "transform 0.15s ease-out"
+                        }}
+                        className="relative shadow-2xl rounded-lg overflow-hidden ring-1 ring-slate-800"
+                      >
+                        <canvas
+                          ref={canvasRef}
+                          onClick={handleCanvasClick}
+                          className="max-h-[560px] max-w-full object-contain block"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Coordonnées en direct */}
+                    <div className="px-4 py-2 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono">
+                          Curseur : X: <strong className="text-slate-200">{cursorCoords.x}</strong>, Y: <strong className="text-slate-200">{cursorCoords.y}</strong>
+                        </span>
+                        <span className="text-slate-600">•</span>
+                        <span>{analysisResult?.detections?.length || 0} anomalie(s)</span>
+                      </div>
+                      <div className="text-slate-500 hidden sm:block">
+                        Cliquez sur une bounding box pour la cibler
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Colonne Droite : Filtres et Liste des défauts (5 col) */}
+                  <div className="lg:col-span-5 space-y-4">
+                    {/* Boîte des Filtres */}
+                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-300">Filtres d'Affichage</span>
+                        <span className="text-cyan-400 font-mono font-medium">
+                          Seuil min : {(minConfidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
+
+                      <input
+                        type="range"
+                        min="0.4"
+                        max="0.99"
+                        step="0.01"
+                        value={minConfidence}
+                        onChange={(e) => setMinConfidence(parseFloat(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                      />
+
+                      <div className="pt-2 border-t border-slate-800/80 grid grid-cols-3 gap-2 text-[11px] text-slate-400">
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={showBoxes}
+                            onChange={(e) => setShowBoxes(e.target.checked)}
+                            className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
+                          />
+                          <span>Boîtes</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={showLabels}
+                            onChange={(e) => setShowLabels(e.target.checked)}
+                            className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
+                          />
+                          <span>Étiquettes</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={showConf}
+                            onChange={(e) => setShowConf(e.target.checked)}
+                            className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
+                          />
+                          <span>Scores %</span>
+                        </label>
+                      </div>
+
+                      {/* Catégories de défauts */}
+                      <div className="pt-2 border-t border-slate-800/80">
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                          Filtrer les 5 classes ciblées
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {Object.keys(DEFECT_CLASSES).map((className) => {
+                            const meta = DEFECT_CLASSES[className];
+                            const isChecked = !activeClasses || activeClasses.includes(className);
+                            return (
+                              <button
+                                key={className}
+                                onClick={() => toggleClassFilter(className)}
+                                className={`px-2 py-1 rounded text-[10px] font-medium transition-all flex items-center gap-1 border ${
+                                  isChecked
+                                    ? "bg-slate-800 text-white border-slate-700"
+                                    : "bg-slate-950/40 text-slate-500 border-slate-800/60 line-through"
+                                }`}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: meta.color }}></span>
+                                {className}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Liste des détections */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between text-xs px-1">
+                        <span className="font-semibold text-slate-300">
+                          Défauts Détectés ({visibleDetections.length})
+                        </span>
+                        <span className="text-slate-500 text-[11px] font-mono">
+                          contrat/schema.py
+                        </span>
+                      </div>
+
+                      {visibleDetections.length === 0 ? (
+                        <div className="p-6 text-center rounded-xl bg-slate-900/40 border border-slate-800/80">
+                          <p className="text-xs text-slate-400">
+                            Aucun défaut visible avec les filtres actuels.
+                          </p>
+                        </div>
+                      ) : (
+                        visibleDetections.map((det, index) => {
+                          const meta = DEFECT_CLASSES[det.label] || { color: "#38bdf8", fr: det.label };
+                          const isHovered = hoveredDefect === index;
+                          const isSelected = selectedDefect === index;
+                          const [xMin, yMin, xMax, yMax] = det.bbox;
+
+                          return (
+                            <div
+                              key={`${det.label}-${index}`}
+                              onMouseEnter={() => setHoveredDefect(index)}
+                              onMouseLeave={() => setHoveredDefect(null)}
+                              onClick={() => setSelectedDefect(isSelected ? null : index)}
+                              className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-slate-800/90 border-cyan-400 shadow-lg shadow-cyan-500/10"
+                                  : isHovered
+                                  ? "bg-slate-800/70 border-slate-600"
+                                  : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: meta.color }}></span>
+                                  <span className="text-xs font-bold text-white">{det.label}</span>
+                                  <span className="text-[10px] text-slate-400">({meta.fr})</span>
+                                </div>
+                                <span
+                                  className="px-2 py-0.5 rounded text-[11px] font-mono font-bold"
+                                  style={{
+                                    backgroundColor: `${meta.color}20`,
+                                    color: meta.color,
+                                    border: `1px solid ${meta.color}50`
+                                  }}
+                                >
+                                  {(det.confidence * 100).toFixed(1)}%
+                                </span>
+                              </div>
+
+                              <div className="w-full bg-slate-800 rounded-full h-1.5 mb-2 overflow-hidden">
+                                <div
+                                  className="h-1.5 rounded-full transition-all"
+                                  style={{
+                                    width: `${det.confidence * 100}%`,
+                                    backgroundColor: meta.color
+                                  }}
+                                ></div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-slate-800/60 text-[10px] font-mono text-slate-400">
+                                <div className="bg-slate-950/60 px-2 py-1 rounded flex justify-between">
+                                  <span>BBox :</span>
+                                  <span className="text-slate-200">[{xMin}, {yMin}, {xMax}, {yMax}]</span>
+                                </div>
+                                <div className="bg-slate-950/60 px-2 py-1 rounded flex justify-between">
+                                  <span>Taille :</span>
+                                  <span className="text-slate-200">{xMax - xMin} × {yMax - yMin} px</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Boutons d'export et impression */}
+                    <div className="pt-2 flex gap-2">
+                      <button
+                        onClick={handleExportJson}
+                        className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Exporter JSON (Contrat)
+                      </button>
+                      <button
+                        onClick={() => window.print()}
+                        className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold"
+                        title="Imprimer"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Historique de la session */}
+                {history.length > 0 && (
+                  <div className="mt-8 pt-6 border-t border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-400"></span>
+                        <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                          Historique de la Session ({history.length})
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => setHistory([])}
+                        className="text-[11px] text-slate-500 hover:text-slate-300"
+                      >
+                        Effacer l'historique
+                      </button>
+                    </div>
+
+                    <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                      {history.map((item, idx) => {
+                        const pass = item.data.status === "no_defect" || item.data.detections.length === 0;
+                        return (
+                          <button
+                            key={`${item.timestamp}-${idx}`}
+                            onClick={() => {
+                              setCurrentImage(item.imageUrl);
+                              setCurrentFileName(item.data.image);
+                              setAnalysisResult(item.data);
+                              setSelectedDefect(null);
+                            }}
+                            className="flex-shrink-0 w-48 p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 border border-slate-800 text-left transition-all flex items-center gap-2.5 group"
+                          >
+                            <div className="w-12 h-14 rounded-lg bg-slate-950 flex items-center justify-center overflow-hidden border border-slate-800 flex-shrink-0">
+                              <img src={item.imageUrl} alt={item.data.image} className="h-full object-contain" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-medium text-white truncate group-hover:text-cyan-300">
+                                {item.data.image}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                                  pass
+                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                                }`}>
+                                  {pass ? "PASS" : "REJET"}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono">{item.timeStr}</span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+
+          {/* Modal Configuration API */}
+          {isSettingsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-white">Configuration Backend FastAPI</h3>
+                  <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-white font-bold">✕</button>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300 block">URL de l'API</label>
+                  <input
+                    type="text"
+                    value={apiUrl}
+                    onChange={(e) => setApiUrl(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-xs focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+                <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+                  <button onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white">
+                    Fermer
+                  </button>
+                  <button onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold">
+                    Valider
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div class="carte">
-          <h2>Défauts (<span id="nb-defauts">0</span>)</h2>
-          <div id="liste"></div>
-          <button type="button" id="export" class="secondaire">Exporter le JSON</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="carte" aria-label="Statistiques de la session">
-    <h2>Session</h2>
-    <div class="compteurs">
-      <div><b id="n-total">0</b>analysées</div>
-      <div><b id="n-ok">0</b>conformes</div>
-      <div><b id="n-ko">0</b>non conformes</div>
-    </div>
-    <table>
-      <thead><tr><th>Heure</th><th>Image</th><th>Verdict</th><th>Défauts</th></tr></thead>
-      <tbody id="historique"></tbody>
-    </table>
-  </section>
-</main>
-
-<script>
-"use strict";
-
-// Les 5 classes du contrat (mêmes couleurs que l'interface Streamlit).
-const CLASSES = {
-  "Bubble": { fr: "Bulle d'air", couleur: "#06b6d4" },
-  "Plastering thread": { fr: "Fil de verre", couleur: "#a855f7" },
-  "Black spot": { fr: "Tache noire", couleur: "#f59e0b" },
-  "Oil": { fr: "Trace d'huile", couleur: "#f43f5e" },
-  "Quenched grain": { fr: "Grain de trempe", couleur: "#10b981" },
-};
-
-const MESSAGES_HTTP = {
-  413: "Fichier trop volumineux (10 Mo maximum).",
-  415: "Format non supporté : utilisez JPEG, PNG, BMP ou WEBP.",
-  422: "Image illisible ou refusée par l'API.",
-  503: "Le modèle n'est pas chargé côté serveur.",
-};
-
-const TAILLE_MAX = 10 * 1024 * 1024;
-const $ = (id) => document.getElementById(id);
-
-const etat = { image: null, nomFichier: "", resultat: null, serveurMs: null, urlImage: null };
-const session = { total: 0, ok: 0, ko: 0, historique: [] };
-
-function urlApi() {
-  return $("api-url").value.trim().replace(/\/+$/, "");
-}
-
-async function appeler(chemin, options = {}, delaiMs = 30000) {
-  const controle = new AbortController();
-  const minuteur = setTimeout(() => controle.abort(), delaiMs);
-  try {
-    return await fetch(urlApi() + chemin, { ...options, signal: controle.signal });
-  } finally {
-    clearTimeout(minuteur);
-  }
-}
-
-async function verifierApi() {
-  $("etat-api").textContent = "Vérification…";
-  $("point").className = "point";
-  try {
-    const r = await appeler("/health", {}, 3000);
-    if (!r.ok) throw new Error(String(r.status));
-    let modele = "";
-    try { modele = (await r.json()).model || ""; } catch { /* corps non JSON */ }
-    $("point").className = "point ok";
-    $("etat-api").textContent = "API prête" + (modele ? " : " + modele : "");
-  } catch {
-    $("point").className = "point ko";
-    $("etat-api").textContent = "API injoignable : lancez uvicorn backend.main:app";
-  }
-}
-
-function afficherErreur(texte) {
-  const zone = $("message");
-  zone.textContent = texte;
-  zone.hidden = !texte;
-}
-
-async function analyser(fichier) {
-  afficherErreur("");
-  if (!fichier.type.startsWith("image/")) {
-    afficherErreur("Ce fichier n'est pas une image.");
-    return;
-  }
-  if (fichier.size > TAILLE_MAX) {
-    afficherErreur(MESSAGES_HTTP[413]);
-    return;
-  }
-
-  $("attente").hidden = false;
-  try {
-    const donnees = new FormData();
-    donnees.append("file", fichier, fichier.name);
-    const reponse = await appeler("/predict", { method: "POST", body: donnees });
-    if (!reponse.ok) {
-      throw new Error(MESSAGES_HTTP[reponse.status] || "Erreur de l'API (code " + reponse.status + ").");
+      );
     }
-    const corps = await reponse.json();
-    if (!corps || typeof corps.status !== "string" || !Array.isArray(corps.detections)) {
-      throw new Error("Réponse de l'API invalide : champs status et detections attendus.");
-    }
-    const ms = parseFloat(reponse.headers.get("X-Process-Time-ms"));
-    etat.serveurMs = Number.isFinite(ms) ? ms : null;
-    await afficherImage(fichier);
-    etat.nomFichier = fichier.name;
-    etat.resultat = corps;
-    compterSession(corps);
-    $("resultat").hidden = false;
-    rendre();
-  } catch (erreur) {
-    afficherErreur(erreur.name === "AbortError"
-      ? "L'API ne répond pas (délai dépassé)."
-      : erreur instanceof TypeError
-        ? "API injoignable : vérifiez l'adresse et que le backend est lancé."
-        : erreur.message);
-  } finally {
-    $("attente").hidden = true;
-  }
-}
 
-function afficherImage(fichier) {
-  return new Promise((resolve, reject) => {
-    if (etat.urlImage) URL.revokeObjectURL(etat.urlImage);
-    etat.urlImage = URL.createObjectURL(fichier);
-    const image = new Image();
-    image.onload = () => { etat.image = image; resolve(); };
-    image.onerror = () => reject(new Error("Impossible d'afficher cette image."));
-    image.src = etat.urlImage;
-  });
-}
-
-function detectionsValides() {
-  const seuil = Number($("seuil").value) / 100;
-  const actives = new Set(
-    [...document.querySelectorAll("#classes input:checked")].map((c) => c.value)
-  );
-  return (etat.resultat ? etat.resultat.detections : []).filter(
-    (d) =>
-      d && Array.isArray(d.bbox) && d.bbox.length === 4 && d.bbox.every(Number.isFinite) &&
-      d.confidence >= seuil && actives.has(d.label)
-  );
-}
-
-function rendre() {
-  const valides = detectionsValides();
-  const sain = valides.length === 0;
-
-  $("verdict").className = "verdict " + (sain ? "pass" : "fail");
-  $("verdict-titre").textContent = sain
-    ? "✓ CONFORME — aucun défaut détecté"
-    : "⚠ NON CONFORME — " + valides.length + " défaut(s) détecté(s)";
-  $("verdict-detail").textContent = sain
-    ? "Avec les filtres actuels."
-    : "Anomalies localisées sur la bouteille.";
-
-  dessiner(valides);
-
-  $("nb-defauts").textContent = String(valides.length);
-  const liste = $("liste");
-  liste.replaceChildren();
-  for (const d of valides) {
-    const meta = CLASSES[d.label] || { fr: d.label, couleur: "#38bdf8" };
-    const [x1, y1, x2, y2] = d.bbox;
-    const carte = document.createElement("div");
-    carte.className = "defaut";
-    carte.style.borderLeftColor = meta.couleur;
-    const tete = document.createElement("div");
-    tete.className = "tete";
-    const nom = document.createElement("span");
-    nom.textContent = d.label + " (" + meta.fr + ")";
-    const pct = document.createElement("span");
-    pct.textContent = Math.round(d.confidence * 100) + " %";
-    pct.style.color = meta.couleur;
-    tete.append(nom, pct);
-    const detail = document.createElement("div");
-    detail.className = "detail";
-    detail.textContent = "bbox [" + d.bbox.join(", ") + "] • " + (x2 - x1) + " × " + (y2 - y1) + " px";
-    carte.append(tete, detail);
-    liste.append(carte);
-  }
-
-  const largeur = etat.image.naturalWidth;
-  const hauteur = etat.image.naturalHeight;
-  let texte = etat.nomFichier + " — " + largeur + " × " + hauteur + " px";
-  if (etat.serveurMs !== null) texte += " — traitement serveur : " + etat.serveurMs.toFixed(0) + " ms";
-  $("mesures").textContent = texte;
-}
-
-function dessiner(detections) {
-  const canvas = $("canvas");
-  const image = etat.image;
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0);
-
-  const petit = Math.min(canvas.width, canvas.height);
-  const epaisseur = Math.max(2, Math.round(petit / 200));
-  const taille = Math.max(12, Math.round(petit / 35));
-  ctx.lineWidth = epaisseur;
-  ctx.font = "600 " + taille + "px system-ui, sans-serif";
-  ctx.textBaseline = "top";
-
-  for (const d of detections) {
-    const meta = CLASSES[d.label] || { couleur: "#38bdf8" };
-    const [x1, y1, x2, y2] = d.bbox;
-    ctx.strokeStyle = meta.couleur;
-    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-
-    const etiquette = d.label + " " + Math.round(d.confidence * 100) + "%";
-    const largeurTexte = ctx.measureText(etiquette).width + 8;
-    const haut = Math.max(0, y1 - taille - 6);
-    ctx.fillStyle = meta.couleur;
-    ctx.fillRect(x1, haut, largeurTexte, taille + 6);
-    ctx.fillStyle = "#0f172a";
-    ctx.fillText(etiquette, x1 + 4, haut + 3);
-  }
-}
-
-function compterSession(corps) {
-  const sain = corps.status === "no_defect" || corps.detections.length === 0;
-  session.total += 1;
-  if (sain) session.ok += 1; else session.ko += 1;
-  session.historique.unshift({
-    heure: new Date().toLocaleTimeString("fr-FR"),
-    image: etat.nomFichier,
-    verdict: sain ? "PASS" : "REJET",
-    nb: corps.detections.length,
-  });
-  session.historique.length = Math.min(session.historique.length, 10);
-
-  $("n-total").textContent = String(session.total);
-  $("n-ok").textContent = String(session.ok);
-  $("n-ko").textContent = String(session.ko);
-  const corpsTable = $("historique");
-  corpsTable.replaceChildren();
-  for (const ligne of session.historique) {
-    const tr = document.createElement("tr");
-    for (const valeur of [ligne.heure, ligne.image, ligne.verdict, String(ligne.nb)]) {
-      const td = document.createElement("td");
-      td.textContent = valeur;
-      tr.append(td);
-    }
-    corpsTable.append(tr);
-  }
-}
-
-function exporterJson() {
-  const valides = detectionsValides();
-  const contenu = JSON.stringify(
-    {
-      image: etat.nomFichier,
-      status: valides.length === 0 ? "no_defect" : "defects_detected",
-      detections: valides,
-    },
-    null,
-    2
-  );
-  const lien = document.createElement("a");
-  lien.href = URL.createObjectURL(new Blob([contenu], { type: "application/json" }));
-  lien.download = "inspection_result.json";
-  lien.click();
-  URL.revokeObjectURL(lien.href);
-}
-
-// --- Branchement des composants ---
-const filtres = $("classes");
-for (const [nom, meta] of Object.entries(CLASSES)) {
-  const etiquette = document.createElement("label");
-  const caseACocher = document.createElement("input");
-  caseACocher.type = "checkbox";
-  caseACocher.value = nom;
-  caseACocher.checked = true;
-  caseACocher.addEventListener("change", () => etat.resultat && rendre());
-  const pastille = document.createElement("span");
-  pastille.className = "pastille";
-  pastille.style.background = meta.couleur;
-  etiquette.append(caseACocher, pastille, document.createTextNode(nom));
-  filtres.append(etiquette);
-}
-
-$("seuil").addEventListener("input", () => {
-  $("seuil-valeur").textContent = $("seuil").value + " %";
-  if (etat.resultat) rendre();
-});
-$("tester").addEventListener("click", verifierApi);
-$("export").addEventListener("click", exporterJson);
-
-const depot = $("depot");
-depot.addEventListener("click", () => $("fichier").click());
-$("fichier").addEventListener("change", (e) => {
-  if (e.target.files[0]) analyser(e.target.files[0]);
-  e.target.value = "";
-});
-for (const nom of ["dragenter", "dragover"]) {
-  depot.addEventListener(nom, (e) => { e.preventDefault(); depot.classList.add("survol"); });
-}
-for (const nom of ["dragleave", "drop"]) {
-  depot.addEventListener(nom, (e) => { e.preventDefault(); depot.classList.remove("survol"); });
-}
-depot.addEventListener("drop", (e) => {
-  if (e.dataTransfer.files[0]) analyser(e.dataTransfer.files[0]);
-});
-
-verifierApi();
-</script>
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
 </body>
 </html>
+
