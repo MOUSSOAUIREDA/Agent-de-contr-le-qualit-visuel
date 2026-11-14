@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QualiGlass AI — Contrôle qualité des bouteilles en verre</title>
+<style>
+  :root {
+    --fond: #0f172a;
+    --carte: #1e293b;
+    --bord: #334155;
+    --texte: #e2e8f0;
+    --discret: #94a3b8;
+    --ok: #10b981;
+    --ko: #f43f5e;
+    --accent: #06b6d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  header, main { max-width: 1100px; margin: 0 auto; padding: 16px 20px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  .sous-titre { color: var(--discret); margin: 0; font-size: .9rem; }
+  .carte {
+    background: var(--carte);
+    border: 1px solid var(--bord);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  input[type="text"] {
+    flex: 1 1 240px;
+    background: var(--fond);
+    color: var(--texte);
+    border: 1px solid var(--bord);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+  }
+  button {
+    background: var(--accent);
+    color: #042f3a;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.secondaire { background: transparent; color: var(--texte); border: 1px solid var(--bord); }
+  button:focus-visible, input:focus-visible, .depot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .point { width: 10px; height: 10px; border-radius: 50%; background: var(--discret); display: inline-block; }
+  .point.ok { background: var(--ok); }
+  .point.ko { background: var(--ko); }
+  .depot {
+    display: block;
+    width: 100%;
+    border: 2px dashed var(--bord);
+    background: transparent;
+    color: var(--texte);
+    border-radius: 12px;
+    padding: 36px 16px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .depot.survol { border-color: var(--accent); background: rgba(6, 182, 212, .08); }
+  .depot small { display: block; color: var(--discret); font-weight: 400; margin-top: 4px; }
+  .verdict { border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; border: 1.5px solid; }
+  .verdict.pass { border-color: var(--ok); background: rgba(16, 185, 129, .12); }
+  .verdict.fail { border-color: var(--ko); background: rgba(244, 63, 94, .12); }
+  .verdict strong { display: block; font-size: 1.05rem; }
+  .verdict span { color: var(--discret); font-size: .85rem; }
+  .grille { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+  @media (max-width: 800px) { .grille { grid-template-columns: 1fr; } }
+  canvas { width: 100%; height: auto; border-radius: 8px; background: #000; display: block; }
+  .defaut { border: 1px solid var(--bord); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; border-left-width: 5px; }
+  .defaut .tete { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+  .defaut .detail { color: var(--discret); font-size: .8rem; font-family: ui-monospace, Consolas, monospace; }
+  .filtres label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4px 0; font-size: .85rem; }
+  .pastille { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .compteurs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; text-align: center; }
+  .compteurs div { background: var(--fond); border: 1px solid var(--bord); border-radius: 10px; padding: 10px; }
+  .compteurs b { display: block; font-size: 1.4rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bord); }
+  th { color: var(--discret); font-weight: 500; }
+  .erreur { border-color: var(--ko); background: rgba(244, 63, 94, .12); color: #fecdd3; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>QualiGlass AI</h1>
+  <p class="sous-titre">Détection des défauts sur bouteilles en verre : bulle, fil de verre, tache noire, huile, grain de trempe.</p>
+</header>
+
+<main>
+  <section class="carte" aria-label="Connexion à l'API">
+    <div class="ligne">
+      <span id="point" class="point" aria-hidden="true"></span>
+      <span id="etat-api" role="status">API non vérifiée</span>
+    </div>
+    <div class="ligne" style="margin-top:10px">
+      <label for="api-url">Adresse de l'API</label>
+      <input type="text" id="api-url" value="http://localhost:8000" autocomplete="off" spellcheck="false">
+      <button type="button" id="tester" class="secondaire">Tester la connexion</button>
+    </div>
+    <p class="sous-titre" style="margin-top:8px">Laissez vide pour utiliser le serveur de <code>run_frontend.py</code> (simulation).</p>
+  </section>
+
+  <section class="carte" aria-label="Dépôt de l'image">
+    <h2>1. Déposer une image de bouteille</h2>
+    <button type="button" id="depot" class="depot">
+      Glissez une image ici, ou cliquez pour en choisir une
+      <small>JPEG, PNG, BMP ou WEBP — 10 Mo maximum</small>
+    </button>
+    <input type="file" id="fichier" accept="image/jpeg,image/png,image/bmp,image/webp" hidden>
+    <div id="message" class="carte erreur" role="alert" hidden style="margin:12px 0 0"></div>
+    <p id="attente" class="sous-titre" hidden style="margin-top:12px">Analyse en cours…</p>
+  </section>
+
+  <section id="resultat" hidden aria-label="Résultats">
+    <h2>2. Résultat de l'inspection</h2>
+    <div id="verdict" class="verdict"><strong id="verdict-titre"></strong><span id="verdict-detail"></span></div>
+
+    <div class="grille">
+      <div class="carte">
+        <canvas id="canvas" aria-label="Image annotée"></canvas>
+        <p id="mesures" class="sous-titre" style="margin:8px 0 0"></p>
+      </div>
+      <div>
+        <div class="carte filtres">
+          <h2>Filtres</h2>
+          <label for="seuil">Confiance minimale : <b id="seuil-valeur">50 %</b></label>
+          <input type="range" id="seuil" min="0" max="100" value="50" style="width:100%">
+          <div id="classes" style="margin-top:8px"></div>
+        </div>
+        <div class="carte">
+          <h2>Défauts (<span id="nb-defauts">0</span>)</h2>
+          <div id="liste"></div>
+          <button type="button" id="export" class="secondaire">Exporter le JSON</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="carte" aria-label="Statistiques de la session">
+    <h2>Session</h2>
+    <div class="compteurs">
+      <div><b id="n-total">0</b>analysées</div>
+      <div><b id="n-ok">0</b>conformes</div>
+      <div><b id="n-ko">0</b>non conformes</div>
+    </div>
+    <table>
+      <thead><tr><th>Heure</th><th>Image</th><th>Verdict</th><th>Défauts</th></tr></thead>
+      <tbody id="historique"></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+// Les 5 classes du contrat (mêmes couleurs que l'interface Streamlit).
+const CLASSES = {
+  "Bubble": { fr: "Bulle d'air", couleur: "#06b6d4" },
+  "Plastering thread": { fr: "Fil de verre", couleur: "#a855f7" },
+  "Black spot": { fr: "Tache noire", couleur: "#f59e0b" },
+  "Oil": { fr: "Trace d'huile", couleur: "#f43f5e" },
+  "Quenched grain": { fr: "Grain de trempe", couleur: "#10b981" },
+};
+
+const MESSAGES_HTTP = {
+  413: "Fichier trop volumineux (10 Mo maximum).",
+  415: "Format non supporté : utilisez JPEG, PNG, BMP ou WEBP.",
+  422: "Image illisible ou refusée par l'API.",
+  503: "Le modèle n'est pas chargé côté serveur.",
+};
+
+const TAILLE_MAX = 10 * 1024 * 1024;
+const $ = (id) => document.getElementById(id);
+
+const etat = { image: null, nomFichier: "", resultat: null, serveurMs: null, urlImage: null };
+const session = { total: 0, ok: 0, ko: 0, historique: [] };
+
+function urlApi() {
+  return $("api-url").value.trim().replace(/\/+$/, "");
+}
+
+async function appeler(chemin, options = {}, delaiMs = 30000) {
+  const controle = new AbortController();
+  const minuteur = setTimeout(() => controle.abort(), delaiMs);
+  try {
+    return await fetch(urlApi() + chemin, { ...options, signal: controle.signal });
+  } finally {
+    clearTimeout(minuteur);
+  }
+}
+
+async function verifierApi() {
+  $("etat-api").textContent = "Vérification…";
+  $("point").className = "point";
+  try {
+    const r = await appeler("/health", {}, 3000);
+    if (!r.ok) throw new Error(String(r.status));
+    let modele = "";
+    try { modele = (await r.json()).model || ""; } catch { /* corps non JSON */ }
+    $("point").className = "point ok";
+    $("etat-api").textContent = "API prête" + (modele ? " : " + modele : "");
+  } catch {
+    $("point").className = "point ko";
+    $("etat-api").textContent = "API injoignable : lancez uvicorn backend.main:app";
+  }
+}
+
+function afficherErreur(texte) {
+  const zone = $("message");
+  zone.textContent = texte;
+  zone.hidden = !texte;
+}
+
+async function analyser(fichier) {
+  afficherErreur("");
+  if (!fichier.type.startsWith("image/")) {
+    afficherErreur("Ce fichier n'est pas une image.");
+    return;
+  }
+  if (fichier.size > TAILLE_MAX) {
+    afficherErreur(MESSAGES_HTTP[413]);
+    return;
+  }
+
+  $("attente").hidden = false;
+  try {
+    const donnees = new FormData();
+    donnees.append("file", fichier, fichier.name);
+    const reponse = await appeler("/predict", { method: "POST", body: donnees });
+    if (!reponse.ok) {
+      throw new Error(MESSAGES_HTTP[reponse.status] || "Erreur de l'API (code " + reponse.status + ").");
+    }
+    const corps = await reponse.json();
+    if (!corps || typeof corps.status !== "string" || !Array.isArray(corps.detections)) {
+      throw new Error("Réponse de l'API invalide : champs status et detections attendus.");
+    }
+    const ms = parseFloat(reponse.headers.get("X-Process-Time-ms"));
+    etat.serveurMs = Number.isFinite(ms) ? ms : null;
+    await afficherImage(fichier);
+    etat.nomFichier = fichier.name;
+    etat.resultat = corps;
+    compterSession(corps);
+    $("resultat").hidden = false;
+    rendre();
+  } catch (erreur) {
+    afficherErreur(erreur.name === "AbortError"
+      ? "L'API ne répond pas (délai dépassé)."
+      : erreur instanceof TypeError
+        ? "API injoignable : vérifiez l'adresse et que le backend est lancé."
+        : erreur.message);
+  } finally {
+    $("attente").hidden = true;
+  }
+}
+
+function afficherImage(fichier) {
+  return new Promise((resolve, reject) => {
+    if (etat.urlImage) URL.revokeObjectURL(etat.urlImage);
+    etat.urlImage = URL.createObjectURL(fichier);
+    const image = new Image();
+    image.onload = () => { etat.image = image; resolve(); };
+    image.onerror = () => reject(new Error("Impossible d'afficher cette image."));
+    image.src = etat.urlImage;
+  });
+}
+
+function detectionsValides() {
+  const seuil = Number($("seuil").value) / 100;
+  const actives = new Set(
+    [...document.querySelectorAll("#classes input:checked")].map((c) => c.value)
+  );
+  return (etat.resultat ? etat.resultat.detections : []).filter(
+    (d) =>
+      d && Array.isArray(d.bbox) && d.bbox.length === 4 && d.bbox.every(Number.isFinite) &&
+      d.confidence >= seuil && actives.has(d.label)
+  );
+}
+
+function rendre() {
+  const valides = detectionsValides();
+  const sain = valides.length === 0;
+
+  $("verdict").className = "verdict " + (sain ? "pass" : "fail");
+  $("verdict-titre").textContent = sain
+    ? "✓ CONFORME — aucun défaut détecté"
+    : "⚠ NON CONFORME — " + valides.length + " défaut(s) détecté(s)";
+  $("verdict-detail").textContent = sain
+    ? "Avec les filtres actuels."
+    : "Anomalies localisées sur la bouteille.";
+
+  dessiner(valides);
+
+  $("nb-defauts").textContent = String(valides.length);
+  const liste = $("liste");
+  liste.replaceChildren();
+  for (const d of valides) {
+    const meta = CLASSES[d.label] || { fr: d.label, couleur: "#38bdf8" };
+    const [x1, y1, x2, y2] = d.bbox;
+    const carte = document.createElement("div");
+    carte.className = "defaut";
+    carte.style.borderLeftColor = meta.couleur;
+    const tete = document.createElement("div");
+    tete.className = "tete";
+    const nom = document.createElement("span");
+    nom.textContent = d.label + " (" + meta.fr + ")";
+    const pct = document.createElement("span");
+    pct.textContent = Math.round(d.confidence * 100) + " %";
+    pct.style.color = meta.couleur;
+    tete.append(nom, pct);
+    const detail = document.createElement("div");
+    detail.className = "detail";
+    detail.textContent = "bbox [" + d.bbox.join(", ") + "] • " + (x2 - x1) + " × " + (y2 - y1) + " px";
+    carte.append(tete, detail);
+    liste.append(carte);
+  }
+
+  const largeur = etat.image.naturalWidth;
+  const hauteur = etat.image.naturalHeight;
+  let texte = etat.nomFichier + " — " + largeur + " × " + hauteur + " px";
+  if (etat.serveurMs !== null) texte += " — traitement serveur : " + etat.serveurMs.toFixed(0) + " ms";
+  $("mesures").textContent = texte;
+}
+
+function dessiner(detections) {
+  const canvas = $("canvas");
+  const image = etat.image;
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0);
+
+  const petit = Math.min(canvas.width, canvas.height);
+  const epaisseur = Math.max(2, Math.round(petit / 200));
+  const taille = Math.max(12, Math.round(petit / 35));
+  ctx.lineWidth = epaisseur;
+  ctx.font = "600 " + taille + "px system-ui, sans-serif";
+  ctx.textBaseline = "top";
+
+  for (const d of detections) {
+    const meta = CLASSES[d.label] || { couleur: "#38bdf8" };
+    const [x1, y1, x2, y2] = d.bbox;
+    ctx.strokeStyle = meta.couleur;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+    const etiquette = d.label + " " + Math.round(d.confidence * 100) + "%";
+    const largeurTexte = ctx.measureText(etiquette).width + 8;
+    const haut = Math.max(0, y1 - taille - 6);
+    ctx.fillStyle = meta.couleur;
+    ctx.fillRect(x1, haut, largeurTexte, taille + 6);
+    ctx.fillStyle = "#0f172a";
+    ctx.fillText(etiquette, x1 + 4, haut + 3);
+  }
+}
+
+function compterSession(corps) {
+  const sain = corps.status === "no_defect" || corps.detections.length === 0;
+  session.total += 1;
+  if (sain) session.ok += 1; else session.ko += 1;
+  session.historique.unshift({
+    heure: new Date().toLocaleTimeString("fr-FR"),
+    image: etat.nomFichier,
+    verdict: sain ? "PASS" : "REJET",
+    nb: corps.detections.length,
+  });
+  session.historique.length = Math.min(session.historique.length, 10);
+
+  $("n-total").textContent = String(session.total);
+  $("n-ok").textContent = String(session.ok);
+  $("n-ko").textContent = String(session.ko);
+  const corpsTable = $("historique");
+  corpsTable.replaceChildren();
+  for (const ligne of session.historique) {
+    const tr = document.createElement("tr");
+    for (const valeur of [ligne.heure, ligne.image, ligne.verdict, String(ligne.nb)]) {
+      const td = document.createElement("td");
+      td.textContent = valeur;
+      tr.append(td);
+    }
+    corpsTable.append(tr);
+  }
+}
+
+function exporterJson() {
+  const valides = detectionsValides();
+  const contenu = JSON.stringify(
+    {
+      image: etat.nomFichier,
+      status: valides.length === 0 ? "no_defect" : "defects_detected",
+      detections: valides,
+    },
+    null,
+    2
+  );
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([contenu], { type: "application/json" }));
+  lien.download = "inspection_result.json";
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+}
+
+// --- Branchement des composants ---
+const filtres = $("classes");
+for (const [nom, meta] of Object.entries(CLASSES)) {
+  const etiquette = document.createElement("label");
+  const caseACocher = document.createElement("input");
+  caseACocher.type = "checkbox";
+  caseACocher.value = nom;
+  caseACocher.checked = true;
+  caseACocher.addEventListener("change", () => etat.resultat && rendre());
+  const pastille = document.createElement("span");
+  pastille.className = "pastille";
+  pastille.style.background = meta.couleur;
+  etiquette.append(caseACocher, pastille, document.createTextNode(nom));
+  filtres.append(etiquette);
+}
+
+$("seuil").addEventListener("input", () => {
+  $("seuil-valeur").textContent = $("seuil").value + " %";
+  if (etat.resultat) rendre();
+});
+$("tester").addEventListener("click", verifierApi);
+$("export").addEventListener("click", exporterJson);
+
+const depot = $("depot");
+depot.addEventListener("click", () => $("fichier").click());
+$("fichier").addEventListener("change", (e) => {
+  if (e.target.files[0]) analyser(e.target.files[0]);
+  e.target.value = "";
+});
+for (const nom of ["dragenter", "dragover"]) {
+  depot.addEventListener(nom, (e) => { e.preventDefault(); depot.classList.add("survol"); });
+}
+for (const nom of ["dragleave", "drop"]) {
+  depot.addEventListener(nom, (e) => { e.preventDefault(); depot.classList.remove("survol"); });
+}
+depot.addEventListener("drop", (e) => {
+  if (e.dataTransfer.files[0]) analyser(e.dataTransfer.files[0]);
+});
+
+verifierApi();
+</script>
+</body>
+</html>
